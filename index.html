@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Forecast App</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="logo">
+      <i class="fas fa-sun"></i>
+      <span>Weather Forecast</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="home"><i class="fas fa-home"></i> Home</a>
+      <!-- <a href="#" class="nav-link" data-page="maps"><i class="fas fa-map-marked-alt"></i> Maps</a> -->
+      <a href="#" class="nav-link" data-page="about"><i class="fas fa-info-circle"></i> About</a>
+      <a href="#" class="nav-link" data-page="contact"><i class="fas fa-envelope"></i> Contact</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+      <i class="fas fa-adjust"></i>
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Home Page (Weather) -->
+    <div class="glass page-section active" id="home-page">
+      <h1><i class="fas fa-cloud-sun"></i> Weather Forecast</h1>
+      
+      <div class="search-section">
+        <input type="text" id="cityInput" placeholder="Enter a city name..." autofocus>
+        <div class="btn-group">
+          <button onclick="getWeather()">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <button class="btn-outline" onclick="getLocation()">
+            <i class="fas fa-location-arrow"></i> Location
+          </button>
+        </div>
+      </div>
+      
+      <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; font-weight: 500;">Loading weather data...</p>
+      </div>
+      
+      <div id="error" class="alert">
+        <strong>Error!</strong> City not found. Please try another location.
+      </div>
+      
+      <!-- Current Weather -->
+      <div class="current-weather" id="currentWeather" style="display: none;">
+        <div class="weather-card">
+          <div class="main-info">
+            <div class="temperature" id="temperature">24°C</div>
+            <img id="weatherIcon" src="" alt="Weather Icon" class="weather-icon">
+          </div>
+          <h2 class="location" id="location">New York, US</h2>
+          <div class="description" id="description">Partly Cloudy</div>
+        </div>
+        
+        <div class="weather-card">
+          <h3>Weather Details</h3>
+          <div class="weather-details">
+            <div class="detail-item">
+              <i class="fas fa-wind"></i>
+              <div>
+                <div class="detail-title">Wind</div>
+                <div class="detail-value" id="wind">5.2 km/h</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-tint"></i>
+              <div>
+                <div class="detail-title">Humidity</div>
+                <div class="detail-value" id="humidity">65%</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-compress"></i>
+              <div>
+                <div class="detail-title">Pressure</div>
+                <div class="detail-value" id="pressure">1013 hPa</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-eye"></i>
+              <div>
+                <div class="detail-title">Visibility</div>
+                <div class="detail-value" id="visibility">10 km</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-temperature-high"></i>
+              <div>
+                <div class="detail-title">Feels Like</div>
+                <div class="detail-value" id="feelsLike">26°C</div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-sun"></i>
+              <div>
+                <div class="detail-title">UV Index</div>
+                <div class="detail-value" id="uvIndex">4 Moderate</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Forecast Section -->
+      <div class="forecast-container" id="forecastContainer" style="display: none;">
+        <h2><i class="fas fa-calendar-alt"></i> 5-Day Forecast</h2>
+        <div class="forecast-cards" id="forecastCards">
+          <!-- Forecast cards will be inserted here -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Maps Page -->
+    <div class="glass page-section" id="maps-page">
+      <h1><i class="fas fa-map-marked-alt"></i> Weather Maps</h1>
+      <p class="text-center">Interactive weather maps showing temperature, precipitation and wind patterns</p>
+      
+      <div class="map-controls">
+        <button class="map-type-btn" data-type="temp">Temperature</button>
+        <button class="map-type-btn" data-type="precipitation">Precipitation</button>
+        <button class="map-type-btn" data-type="wind">Wind</button>
+        <button class="map-type-btn" data-type="clouds">Cloud Cover</button>
+      </div>
+      
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+      
+      <div class="features" style="margin-top: 30px;">
+        <div class="feature-card">
+          <i class="fas fa-thermometer-three-quarters"></i>
+          <h3>Temperature</h3>
+          <p>View current temperatures and heat index around the world</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-cloud-rain"></i>
+          <h3>Precipitation</h3>
+          <p>See rainfall and snowfall patterns with precipitation maps</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-wind"></i>
+          <h3>Wind Patterns</h3>
+          <p>Track wind speed and direction with our wind maps</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-cloud"></i>
+          <h3>Cloud Cover</h3>
+          <p>Monitor cloud formations and coverage globally</p>
+        </div>
+      </div>
+    </div>
+
+<!-- About Page -->
+<div class="glass page-section" id="about-page">
+  <h1><i class="fas fa-info-circle"></i> About This Weather App</h1>
+
+  <div class="app-info" style="margin-top: 30px;">
+    <p>
+      Welcome to the Weather Forecast App — your reliable companion for staying updated on weather conditions around the world. Whether you're planning a trip, heading to work, or just curious about the forecast, this app has got you covered.
+    </p>
+
+    <p>
+      With an intuitive design and user-friendly interface, the app delivers real-time weather updates directly to your screen. It is built with modern technologies and powered by trusted weather data sources to ensure that you get the most accurate information at all times.
+    </p>
+
+    <h3 style="margin-top: 25px;">Key Features</h3>
+    <ul style="margin-top: 15px; padding-left: 20px;">
+        <li>Real-time weather data for any location</li>
+            <li>5-day forecast with detailed information</li>
+            <li>Dark/light mode for comfortable viewing</li>
+            <li>Responsive design for all devices</li>
+               <li>Simple input system for quick forecasts</li>
+    </ul>
+  </div>
+</div>
+
+
+    
+
+
+
+
+<div class="glass page-section" id="contact-page">
+  <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+  <p class="text-center">Have questions or feedback? We'd love to hear from you!</p>
+
+  <div class="contact-container" style="display: flex; flex-wrap: wrap; gap: 30px; margin-top: 30px;">
+    <div class="contact-form" style="flex: 1 1 300px; min-width: 280px;">
+      <h2>Send a Message</h2>
+      <form id="contactForm">
+        <div class="form-group">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" class="form-control" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" class="form-control" placeholder="Enter subject" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" class="form-control" rows="5" placeholder="Type your message here..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success btn-block">
+          <i class="fas fa-paper-plane"></i> Send Message
+        </button>
+      </form>
+    </div>
+   
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="social-links">
+        <a href="https://x.com/RupaliMangla07?t=UJ7a4OAoN_jW_DjbDg1WnQ&s=08"><i class="fab fa-twitter"></i></a>
+       <a href="https://www.linkedin.com/in/rupali-mangla-3ab906324?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"><i class="fab fa-linkedin"></i></a>
+        <a href="https://github.com/Manglarupali007"><i class="fab fa-github"></i></a>
+      </div>
+      <div class="copyright">
+        © 2025 Weather Forecast App | Created with <i class="fas fa-heart" style="color:#ff6b6b;"></i> 
+      </div>
+    </div>
+  </footer>
+  </body>
+</html>
